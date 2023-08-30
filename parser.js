@@ -5,8 +5,18 @@ module.exports = {
       markdown = markdown.replace(/\\([a-zA-Z])(bf|bb|cal|scr)/gm, "\\math$2{$1}");
       markdown = markdown.replace(/\\hM/gm, "\\widehat{\\mathcal{M}}");
       markdown = markdown.replace(/\\(cv|cvr)/gm, "\\mathrm{$1}");
-      markdown = markdown.replace(/\\section{(.*?)}/gm, "## $1");
-      markdown = markdown.replace(/\\subsection{(.*?)}/gm, "### $1");
+      function font_rep(word, texttype, maintext, text, html) {
+        if(texttype == "it") return "*" + maintext + "*";
+        else return "**" + maintext + "**";
+      }
+      markdown = markdown.replace(/\\text(it|bf){(.*?)}/gm, font_rep);
+      
+      function sec_rep(word, sec_type, sec_name, text, html) {
+        if(sec_type == "section") return "##" + sec_name;
+        else if(sec_type == "subsection") return "###" + sec_name;
+        else return "####" + sec_name;
+      }
+      markdown = markdown.replace(/\\(section|subsection){(.*?)}/gm, sec_rep);
       markdown = markdown.replace(/\\arg(min|max)/gm, "\\mathop{\\mathrm{arg$1}}");
       return resolve(markdown)
     })
