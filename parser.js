@@ -4,6 +4,9 @@ module.exports = {
       markdown = markdown.replace(/\\begin{aligned}([\s\S]*?)\\end{aligned}/gm, ($0) =>  "```math\n" + $0 + "\n```\n" );
       markdown = markdown.replace(/\\([a-zA-Z])(bf|bb|cal|scr)/gm, "\\math$2{$1}");
       markdown = markdown.replace(/\\hM/gm, "\\widehat{\\mathcal{M}}");
+      markdown = markdown.replace(/\\(cv|cvr)/gm, "\\mathrm{$1}");
+      markdown = markdown.replace(/\\section{(.*?)}/gm, "## $1");
+      markdown = markdown.replace(/\\subsection{(.*?)}/gm, "### $1");
       markdown = markdown.replace(/\\arg(min|max)/gm, "\\mathop{\\mathrm{arg$1}}");
       return resolve(markdown)
     })

@@ -4,6 +4,8 @@
 Several enviroments are included.
 - theorem and lemma
 - align
+- section and subsection
 
 Math shorthand.
 - \\math(bf|bb|cal|scr){[a-zA-Z]} => \[a-zA-Z](bf|bb|cal|scr)
+- shorthand for mathrm: \\mathrm{#1} => \\#1
