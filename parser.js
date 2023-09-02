@@ -18,12 +18,21 @@ module.exports = {
       }
       markdown = markdown.replace(/\\(section|subsection){(.*?)}/gm, sec_rep);
       markdown = markdown.replace(/\\arg(min|max)/gm, "\\mathop{\\mathrm{arg$1}}");
+
+      function itemize_rep(word, item_text, html) {
+        item_text = item_text.replace(/\\item/gm, "\n -");
+        return item_text;
+      }
+      markdown = markdown.replace(/\\begin{itemize}([\s\S]*?)\\end{\itemize}/gm, itemize_rep);
+
       return resolve(markdown)
     })
   },
   onDidParseMarkdown: function(html, {cheerio}) {
     return new Promise((resolve, reject)=> {
-      var thm =  /<p>\\begin{(thm|lemma)}({(.*?)}){0,1}(\\label{(.*?)}){0,1}<br>([\s\S]*?)\\end{(thm|lemma)}<\/p>/gm;
+
+      // theorem and lemma
+      var thm =  /\\begin{(thm|lemma)}(\[(.*?)\]){0,1}(\\label{(.*?)}){0,1}([\s\S]*?)\\end{(thm|lemma)}/gm;
       var thm_counter = 1;
       var lem_counter = 1;
       function thm_rep(word, type, s2, name, label, label_name, text, html) {
@@ -43,10 +52,9 @@ module.exports = {
         text = text.replace(/<p.*?>|<\/p>/gm, ($1) => "");
         text = text.replace(/^\s*\n/gm, "");
         return "<div id=\"" + typename+counter + "\" class=\"theorem\">\n\
-        <p class=\"title\">" + typename +" "+ counter ++ + ". "+ name +  "</p>\
-        <p class=\"thmtext\">" + text + "</p>\n</div>";
+        <p> <span class=\"title\">" + typename +" "+ counter ++ + ". ("+ name +  ")</span>\
+        <span class=\"thmtext\">" + text + "</span></p>\n</div>";
       }
-
       function getlabel (str) {
         var ref_word, ref_word_thm;
         var typename;
@@ -91,7 +99,7 @@ module.exports = {
         thm_rep
     );
 
-      return resolve(html)
+    return resolve(html)
     })
   },
   onWillTransformMarkdown: function (markdown) {

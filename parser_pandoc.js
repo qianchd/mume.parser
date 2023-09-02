@@ -134,7 +134,9 @@ module.exports = {
         thm_rep
     );
 
-      return resolve(html)
+    html = html.replace(/{\\color{(.*?)}([\s\S]*?)% end of color }/gm, "<font color=\"$1\">$2</font>");
+
+    return resolve(html)
     })
   },
   onWillTransformMarkdown: function (markdown) {
