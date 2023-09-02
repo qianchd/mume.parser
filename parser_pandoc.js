@@ -11,13 +11,19 @@ module.exports = {
       }
       markdown = markdown.replace(/\\text(it|bf){(.*?)}/gm, font_rep);
       
-      function sec_rep(word, sec_type, sec_name, text, html) {
-        if(sec_type == "section") return "##" + sec_name;
-        else if(sec_type == "subsection") return "###" + sec_name;
-        else return "####" + sec_name;
+      function sec_rep(word, sec_type, sec_name, is_label, sec_label, text, html) {
+        if(sec_type == "section") var res = "##" + sec_name;
+        else if(sec_type == "subsection") var res = "###" + sec_name;
+        else var res = "####" + sec_name;
+
+        if(is_label == undefined) {
+          return res;
+        } else {
+          res = res + " {#" + sec_label + "}";
+          return res;
+        }
       }
-      markdown = markdown.replace(/\\(section|subsection){(.*?)}/gm, sec_rep);
-      markdown = markdown.replace(/\\label{sec:(.*?)}/gm, "{#sec:$1}")
+      markdown = markdown.replace(/\\(section|subsection)\{(.*?)\}(\\label\{(sec:.*?)\}){0,1}/gm, sec_rep);
       markdown = markdown.replace(/\\arg(min|max)/gm, "\\mathop{\\mathrm{arg$1}}");
       function citep_rep(word, citetype, citekey, text, html) {
         citekey = citekey.replace(/,/g, ",@");
@@ -28,8 +34,14 @@ module.exports = {
         }
       }
       markdown = markdown.replace(/\\(citep|citet){(.*?)}/gm, citep_rep);
-      markdown = markdown.replace(/\\ref{(.*?)}/gm, "@$1");
 
+      function itemize_rep(word, item_text, html) {
+        item_text = item_text.replace(/\\item/gm, "\n -");
+        return item_text;
+      }
+      markdown = markdown.replace(/\\begin{itemize}([\s\S]*?)\\end{\itemize}/gm, itemize_rep);
+
+      markdown = markdown.replace(/\\ref{(eq|fig|tab|sec)(.*?)}/gm, "@$1$2");
       var reg_eq = /\\begin{equation}\\label{(.*?)}([\s\S]*?)\\end{equation}/gm;
       markdown = markdown.replace(reg_eq, "$$$$ $2 $$$$ {#$1}");
 
@@ -38,11 +50,12 @@ module.exports = {
   },
   onDidParseMarkdown: function(html, {cheerio}) {
     return new Promise((resolve, reject)=> {
-      var thm =  /<p>\\begin{(thm|lemma)}({(.*?)}){0,1}(\\label{(.*?)}){0,1}<br>([\s\S]*?)\\end{(thm|lemma)}<\/p>/gm;
+      var thm =  /<p>\\begin\{(theorem|lemma|condition)\}((\[|<span)([\s\S]*?)(\]|<\/span>)){0,1}(\\label\{(\S*?)\}){0,1}([\s\S]*?)\\end\{(theorem|lemma|condition)\}<\/p>/gm;
       var thm_counter = 1;
       var lem_counter = 1;
-      function thm_rep(word, type, s2, name, label, label_name, text, html) {
-        if (type == "thm") {
+      var cdt_counter = 1;
+      function thm_rep(word, type, s2, s3, name, s4, label, label_name, text, html) {
+        if (type == "theorem") {
           var counter = thm_counter;
           var typename = "Theorem";
           ++thm_counter;
@@ -52,26 +65,38 @@ module.exports = {
           var typename = "Lemma";
           ++lem_counter;
         }
-        if (name == undefined) {
-          name = "";
+        if (type == "condition") {
+          var counter = cdt_counter;
+          var typename = "Condition";
+          ++lem_counter;
         }
-        text = text.replace(/<p.*?>|<\/p>/gm, ($1) => "");
-        text = text.replace(/^\s*\n/gm, "");
-        return "<div id=\"" + typename+counter + "\" class=\"theorem\">\n\
-        <p class=\"title\">" + typename +" "+ counter ++ + ". "+ name +  "</p>\
-        <p class=\"thmtext\">" + text + "</p>\n</div>";
+        // text = text.replace(/<p.*?>|<\/p>/gm, "");
+        // text = text.replace(/^\s*\n/gm, "");
+        // return "<p id=\"" + typename+counter + "\" class=\"thm\"> TYPE:" + type +"\nS2:" + s2 + "\nNAME:" + name + "\nLABEL:" + label + "\nLABEL_NAME:" + label_name + "\nTEXT:" + text + "</p>";
+        if (name == undefined) {
+          return "<p id=\"" + typename+counter + "\" class=\"thm\">\
+        " + typename +" "+ counter + ". " + text + "</p>";
+        } else if(s3 == "<span") {
+          return "<p id=\"" + typename+counter + "\" class=\"thm\">\
+          " + typename +" "+ counter + ". "+ s2 + " " + text + "</p>";
+        } else {
+          return "<p id=\"" + typename+counter + "\" class=\"thm\">\
+          " + typename +" "+ counter + ". ("+ name + ") " + text + "</p>";
+        }
+
       }
 
       function getlabel (str) {
         var ref_word, ref_word_thm;
         var typename;
-        var reg = /\\begin{(lemma|thm)}.*?\\label{(.*?)}/gm;
+        var reg = /\\begin{(lemma|theorem|condition)}[\S\s]*?\\label{(\S*?)}/gm;
         var thm_counter = 0;
         var lem_counter = 0;
+        var cdt_counter = 0;
         var counter = 0;
         var result = null;
         while((result = reg.exec(str)) != null){
-            if(result[1] == "thm") {
+            if(result[1] == "theorem") {
                 ++thm_counter;
                 typename = "Theorem";
                 counter = thm_counter;
@@ -81,10 +106,13 @@ module.exports = {
                 typename = "Lemma";
                 counter = lem_counter;
             }
-            ref_word = new RegExp("\\\\ref{" + result[2] + "}", "gm");
-            ref_word_thm = new RegExp("\\\\thmref{" + result[2] + "}", "gm");
-            str = str.replace(ref_word_thm, ($0) =>   typename + " " + "<a href=#" + typename+counter + ">" + counter + "</a>");
-            str = str.replace(ref_word, ($0) => counter);
+            if(result[1] == "condition") {
+              ++cdt_counter;
+              typename = "Condition";
+              counter = cdt_counter;
+          }
+            ref_word_thm = new RegExp("\\\\ref{" + result[2] + "}", "gm");
+            str = str.replace(ref_word_thm, ($0) =>   "<a href=#" + typename+counter + ">" + counter + "</a>");
             //console.log(result);
         }
         // var reg_eq = /\\begin{equation}\\label{(.*?)}([\s\S]*?)\\end{equation}/gm;
