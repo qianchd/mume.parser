@@ -1,29 +1,44 @@
 module.exports = {
   onWillParseMarkdown: function(markdown) {
     return new Promise((resolve, reject)=> {
+      // align
       markdown = markdown.replace(/\\begin{aligned}([\s\S]*?)\\end{aligned}/gm, ($0) =>  "```math\n" + $0 + "\n```\n" );
+
+      //bf bb cal scr
       markdown = markdown.replace(/\\([a-zA-Z])(bf|bb|cal|scr)/gm, "\\math$2{$1}");
+
+      // shorthands
       markdown = markdown.replace(/\\hM/gm, "\\widehat{\\mathcal{M}}");
       markdown = markdown.replace(/\\(cv|cvr)/gm, "\\mathrm{$1}");
+      markdown = markdown.replace(/\\arg(min|max)/gm, "\\mathop{\\mathrm{arg$1}}");
+
+      // textbf and textit
       function font_rep(word, texttype, maintext, text, html) {
         if(texttype == "it") return "*" + maintext + "*";
         else return "**" + maintext + "**";
       }
       markdown = markdown.replace(/\\text(it|bf){(.*?)}/gm, font_rep);
       
-      function sec_rep(word, sec_type, sec_name, text, html) {
-        if(sec_type == "section") return "##" + sec_name;
-        else if(sec_type == "subsection") return "###" + sec_name;
-        else return "####" + sec_name;
-      }
-      markdown = markdown.replace(/\\(section|subsection){(.*?)}/gm, sec_rep);
-      markdown = markdown.replace(/\\arg(min|max)/gm, "\\mathop{\\mathrm{arg$1}}");
-
+      // itemize
       function itemize_rep(word, item_text, html) {
         item_text = item_text.replace(/\\item/gm, "\n -");
         return item_text;
       }
       markdown = markdown.replace(/\\begin{itemize}([\s\S]*?)\\end{\itemize}/gm, itemize_rep);
+
+      // equation
+      var reg_eq = /\\begin{equation}\\label{(.*?)}([\s\S]*?)\\end{equation}/gm;
+      var eq_counter = 0;
+      while((result = reg_eq.exec(markdown)) != null) {
+        ++eq_counter;
+        ref_word = new RegExp("\\\\ref{" + result[1] + "}", "gm");
+        markdown = markdown.replace(ref_word, ($0) => eq_counter);
+        ref_word2 = new RegExp("\\\\begin{equation}\\\\label{" + result[1] + "}([\\s\\S]*?)\\\\end{equation}", "gm");
+        markdown = markdown.replace(ref_word2, "\\begin{equation}$1 \\tag{"+ eq_counter + "}\\end{equation}");
+      }
+
+      // figure and table
+      markdown = markdown.replace(/\\ref{(fig|tab)(.*?)}/gm, "@$1$2");
 
       return resolve(markdown)
     })
@@ -80,15 +95,30 @@ module.exports = {
             str = str.replace(ref_word, ($0) => counter);
             //console.log(result);
         }
-        var reg_eq = /\\begin{equation}\\label{(.*?)}([\s\S]*?)\\end{equation}/gm;
-        var eq_counter = 0;
-        while((result = reg_eq.exec(str)) != null){
-          ++eq_counter;
-          ref_word = new RegExp("\\\\ref{" + result[1] + "}", "gm");
-          str = str.replace(ref_word, ($0) => eq_counter);
-          ref_word2 = new RegExp("\\\\begin{equation}\\\\label{" + result[1] + "}([\\s\\S]*?)\\\\end{equation}", "gm");
-          str = str.replace(ref_word2, "\\begin{equation}$1 \\tag{"+ eq_counter + "}\\end{equation}");
+
+        // section
+        var reg_sec = /\<p\>\\(section|subsection|subsubsection)\{(.*?)\}(\\label\{sec:(.*?)\}){0,1}\<\/p\>/gm;
+        var sec_counter = 0;
+        while((result = reg_sec.exec(str)) != null) {
+          ++sec_counter;
+          if(result[3] != undefined) {
+            // ref_word = new RegExp(result[4], "gm");
+            str = str.replace("\\ref{sec:" + result[4] + "}", sec_counter);
+          }
         }
+        function sec_rep(word, sec_type, sec_name, is_label, sec_label, text, html) {
+          if(is_label == undefined) {
+            if(sec_type == "section") return "<h2 class=\"mume-header\">" + sec_name + "</h2>";
+            else if(sec_type == "subsection") return "<h3 class=\"mume-header\">" + sec_name + "</h3>";
+            else return "<h4 class=\"mume-header\">" + sec_name + "</h4>";
+          } else {
+            if(sec_type == "section") return "<h2 class=\"mume-header\" id = \"" + sec_label + "\">" + sec_name + "</h2>";
+            else if(sec_type == "subsection") return "<h3 class=\"mume-header\" id = \"" + sec_label + "\">" + sec_name + "</h3>";
+            else return "<h4 class=\"mume-header\" id = \"" + sec_label + "\">" + sec_name + "</h4>";
+          }
+        }
+        str = str.replace(/\<p\>\\(section|subsection)\{(.*?)\}(\\label\{(.*?)\}){0,1}\<\/p\>/gm, sec_rep);
+
         return str;
     }
 
@@ -98,6 +128,9 @@ module.exports = {
         thm, 
         thm_rep
     );
+
+    // color
+    html = html.replace(/{\\color{(.*?)}([\s\S]*?)% end of color\n}/gm, "<font color=\"$1\">$2</font>");
 
     return resolve(html)
     })

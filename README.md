@@ -9,7 +9,10 @@ Several enviroments are included.
 - \\(section|subsection){sec_name}(\\label{sec:sec_lab}) => (#|##) sec_name {#sec:sec_lab}
 - \\textit{text} and \\textbf{text} => *text* and **text**
 - itemize => unnumbered list
+- \\color
 
 Math shorthand.
 - \\math(bf|bb|cal|scr){\[a-zA-Z\]} => \\(\[a-zA-Z\])(bf|bb|cal|scr).
 - shorthand for mathrm: \\mathrm{#1} => \\#1, with #1 some user-defined symbols.
+
+bib citations are only supported by pandoc parser. TODO: figure out how to adopt *citeproc* in *markdown-it*.
