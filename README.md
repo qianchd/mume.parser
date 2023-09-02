@@ -12,7 +12,7 @@ Several enviroments are included.
 - \\color
 
 Math shorthand.
-- \\math(bf|bb|cal|scr){\[a-zA-Z\]} => \\(\[a-zA-Z\])(bf|bb|cal|scr).
+- \\math(bf|bb|cal|scr){[a-zA-Z]} => \\([a-zA-Z])(bf|bb|cal|scr).
 - shorthand for mathrm: \\mathrm{#1} => \\#1, with #1 some user-defined symbols.
 
 bib citations are only supported by pandoc parser. TODO: figure out how to adopt *citeproc* in *markdown-it*.
