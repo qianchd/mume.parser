@@ -1,0 +1,19 @@
+{
+  "markdown-preview-enhanced.mathRenderingOption": "MathJax",
+  "markdown-preview-enhanced.breakOnSingleNewLine": false,
+  "markdown-preview-enhanced.usePandocParser": true,
+  "files.associations": {
+    "*.rmd": "markdown"
+  },
+  "markdown-preview-enhanced.pandocArguments": [
+    "-F",
+    "pandoc-crossref",
+    "--citeproc",
+    "--metadata", 
+    "link-citations=true",
+    "--csl",
+    "rss.csl",
+    "--bibliography=ref.bib",
+    "--shift-heading-level-by=-1"
+  ]
+}
