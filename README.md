@@ -11,5 +11,5 @@ Several enviroments are included.
 - itemize => unnumbered list
 
 Math shorthand.
-- \\math(bf|bb|cal|scr){[a-zA-Z]} => \\[a-zA-Z](bf|bb|cal|scr).
+- \\math(bf|bb|cal|scr){\[a-zA-Z\]} => \\(\[a-zA-Z\])(bf|bb|cal|scr).
 - shorthand for mathrm: \\mathrm{#1} => \\#1, with #1 some user-defined symbols.
