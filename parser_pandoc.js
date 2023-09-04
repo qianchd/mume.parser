@@ -50,7 +50,7 @@ module.exports = {
       
       // citation
       function citep_rep(word, citetype, citekey, text, html) {
-        citekey = citekey.replace(/,/g, ",@");
+        citekey = citekey.replace(/,/g, ", @");
         if (citetype == "citep") {
           return "(@" + citekey + ")";
         } else {
@@ -137,7 +137,9 @@ module.exports = {
         thm_rep
     );
 
-    html = html.replace(/\\qquad{\((.*?)\)}\\\]<\/span><\/span>/gm, "\\tag{$1}\\\]<\/span><\/span>")
+    // equation
+    html = html.replace(/\\qquad{\((.*?)\)}\\\]<\/span><\/span>/gm, "\\tag{$1}\\\]<\/span><\/span>");
+
     // color
     html = html.replace(/{\\color{(.*?)}([\s\S]*?)% end of color }/gm, "<font color=\"$1\">$2</font>");
 
