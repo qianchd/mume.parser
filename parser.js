@@ -1,9 +1,7 @@
 ({
   onWillParseMarkdown: async function(markdown) {
-    // align
-    // markdown = markdown.replace(/\\begin{(aligned|align\*)}([\s\S]*?)\\end{(aligned|align\*)}/gm, "```math\n\\begin{aligned}\n $2 \\end{aligned}\n```\n");
-
-    // equation label and auto-numbering
+    
+    // align, equation label and auto-numbering
     var reg_eq = /\\begin{equation}(\\label{(.*?)})?([\s\S]*?)\\end{equation}/gm;
     var eq_counter = 0;
     while((result = reg_eq.exec(markdown)) != null) {
