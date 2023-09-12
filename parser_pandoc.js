@@ -2,7 +2,7 @@
   onWillParseMarkdown: async function(markdown) {
     
     // align
-    markdown = markdown.replace(/\\begin{aligned}([\s\S]*?)\\end{aligned}/gm, ($0) =>  "```math\n" + $0 + "\n```\n" );
+    markdown = markdown.replace(/\\begin{(aligned|align\*)}([\s\S]*?)\\end{(aligned|align\*)}/gm, "```math\n\\begin{aligned}\n $2 \\end{aligned}\n```\n");
 
     //bf bb cal scr
     markdown = markdown.replace(/\\([a-zA-Z])(bf|bb|cal|scr)/gm, "\\math$2{$1}");

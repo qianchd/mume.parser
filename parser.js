@@ -1,15 +1,29 @@
 ({
   onWillParseMarkdown: async function(markdown) {
     // align
-    markdown = markdown.replace(/\\begin{(aligned|align)}([\s\S]*?)\\end{(aligned|align)}/gm, "```math\n\\begin{aligned}\n $2 \\end{aligned}\n```\n");
+    // markdown = markdown.replace(/\\begin{(aligned|align\*)}([\s\S]*?)\\end{(aligned|align\*)}/gm, "```math\n\\begin{aligned}\n $2 \\end{aligned}\n```\n");
+
+    // equation label and auto-numbering
+    var reg_eq = /\\begin{equation}(\\label{(.*?)})?([\s\S]*?)\\end{equation}/gm;
+    var eq_counter = 0;
+    while((result = reg_eq.exec(markdown)) != null) {
+      ++eq_counter;
+      if (result[1] != undefined) {
+        ref_word = new RegExp("\\\\ref{" + result[2] + "}", "gm");
+        markdown = markdown.replace(ref_word, ($0) => eq_counter);
+        ref_word2 = new RegExp("\\\\begin{equation}\\\\label{" + result[2] + "}([\\s\\S]*?)\\\\end{equation}", "gm");
+        markdown = markdown.replace(ref_word2, "\\begin{equation} $1 \\tag{"+ eq_counter + "}\\end{equation}");
+      }
+    }
+    markdown = markdown.replace(/\\begin{(equation|equation\*|align\*)}([\s\S]*?)\\end{(equation|equation\*|align\*)}/gm, "```math \n \\begin{$1} $2 \\end{$1}\n```\n");
 
     //bf bb cal scr
-    markdown = markdown.replace(/\\([a-zA-Z])(bf|bb|cal|scr)/gm, "\\math$2{$1}");
+    // markdown = markdown.replace(/\\([a-zA-Z])(bf|bb|cal|scr)/gm, "\\math$2{$1}");
 
     // shorthands
     markdown = markdown.replace(/\\hM/gm, "\\widehat{\\mathcal{M}}");
     markdown = markdown.replace(/\\(cv|cvr)/gm, "\\mathrm{$1}");
-    markdown = markdown.replace(/\\arg(min|max)/gm, "\\mathop{\\mathrm{arg$1}}");
+    // markdown = markdown.replace(/\\arg(min|max)/gm, "\\mathop{\\mathrm{arg$1}}");
 
     // textbf and textit
     function font_rep(word, texttype, maintext, text, html) {
@@ -24,17 +38,6 @@
       return item_text;
     }
     markdown = markdown.replace(/\\begin{itemize}([\s\S]*?)\\end{\itemize}/gm, itemize_rep);
-
-    // equation
-    var reg_eq = /\\begin{equation}\\label{(.*?)}([\s\S]*?)\\end{equation}/gm;
-    var eq_counter = 0;
-    while((result = reg_eq.exec(markdown)) != null) {
-      ++eq_counter;
-      ref_word = new RegExp("\\\\ref{" + result[1] + "}", "gm");
-      markdown = markdown.replace(ref_word, ($0) => eq_counter);
-      ref_word2 = new RegExp("\\\\begin{equation}\\\\label{" + result[1] + "}([\\s\\S]*?)\\\\end{equation}", "gm");
-      markdown = markdown.replace(ref_word2, "\\begin{equation}$1 \\tag{"+ eq_counter + "}\\end{equation}");
-    }
 
     // figure and table
     markdown = markdown.replace(/\\ref{(fig|tab)(.*?)}/gm, "@$1$2");
