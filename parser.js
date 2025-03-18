@@ -1,5 +1,14 @@
 ({
   onWillParseMarkdown: async function(markdown) {
+
+    var title_search = /\\title{(.*?)}/gm; 
+    title = title_search.exec(markdown)[1];
+
+    markdown = markdown.replace(/([\s\S]*)\\maketitle/gm, "<h1 class=\"mume-header\">" + title + "</h1>");
+
+    markdown = markdown.replace(/\\bibliography([\s\S]*)\\end{document}/gm, "")
+
+    markdown = markdown.replace(/% (.*)/gm, "")
     
     // align, equation label and auto-numbering
     var reg_eq = /\\begin{equation}(\\label{(.*?)})?([\s\S]*?)\\end{equation}/gm;
@@ -13,18 +22,29 @@
         markdown = markdown.replace(ref_word2, "\\begin{equation} $1 \\tag{"+ eq_counter + "}\\end{equation}");
       }
     }
-    markdown = markdown.replace(/\\begin{(equation|equation\*|align\*)}([\s\S]*?)\\end{(equation|equation\*|align\*)}/gm, "```math \n \\begin{$1} $2 \\end{$1}\n```\n");
+
+    function eq_rep_with_indent_marker(word, eq_type, eq_text, eq_type2, indent_marker) {
+      if(eq_type != eq_type2) {
+        return "ERROR: begin and end no match!!!!!!!!!\n" + indent_marker
+      }
+      if(eq_type == "align\*") eq_type = "aligned"
+      if(indent_marker != "") {
+        return "```math \n \\begin{" + eq_type + "} " + eq_text + "\\end{" + eq_type + "}\n```\n" + "noindent:" + indent_marker
+      } else {
+        return "```math \n \\begin{" + eq_type + "} " + eq_text + "\\end{" + eq_type + "}\n```\n"
+      }
+    }
+
+    markdown = markdown.replace(/\\begin{(equation|equation\*|align\*)}([\s\S]*?)\\end{(equation|equation\*|align\*)}\n(.*)/gm, eq_rep_with_indent_marker);
 
     //bf bb cal scr
     // markdown = markdown.replace(/\\([a-zA-Z])(bf|bb|cal|scr)/gm, "\\math$2{$1}");
 
     // shorthands
-    markdown = markdown.replace(/\\hM/gm, "\\widehat{\\mathcal{M}}");
-    markdown = markdown.replace(/\\(cv|cvr)/gm, "\\mathrm{$1}");
     // markdown = markdown.replace(/\\arg(min|max)/gm, "\\mathop{\\mathrm{arg$1}}");
 
     // textbf and textit
-    function font_rep(word, texttype, maintext, text, html) {
+    function font_rep(word, texttype, maintext) {
       if(texttype == "it") return "*" + maintext + "*";
       else return "**" + maintext + "**";
     }
@@ -40,16 +60,17 @@
     // figure and table
     markdown = markdown.replace(/\\ref{(fig|tab)(.*?)}/gm, "@$1$2");
 
+
     return markdown;
   },
 
   onDidParseMarkdown: async function(html) {
     // theorem and lemma
-    var thm =  /\\begin{(thm|lemma)}(\[(.*?)\]){0,1}(\\label{(.*?)}){0,1}([\s\S]*?)\\end{(thm|lemma)}/gm;
+    var thm =  /\\begin{(theorem|lemma)}(\[(.*?)\]){0,1}(\\label{(.*?)}){0,1}([\s\S]*?)\\end{(theorem|lemma)}/gm;
     var thm_counter = 1;
     var lem_counter = 1;
-    function thm_rep(word, type, s2, name, label, label_name, text, html) {
-      if (type == "thm") {
+    function thm_rep(word, type, _, name, label, label_name, text) {
+      if (type == "theorem") {
         var counter = thm_counter;
         var typename = "Theorem";
         ++thm_counter;
@@ -59,25 +80,31 @@
         var typename = "Lemma";
         ++lem_counter;
       }
-      if (name == undefined) {
-        name = "";
-      }
+
       text = text.replace(/<p.*?>|<\/p>/gm, ($1) => "");
       text = text.replace(/^\s*\n/gm, "");
-      return "<div id=\"" + typename+counter + "\" class=\"theorem\">\n\
-      <p> <span class=\"title\">" + typename +" "+ counter ++ + ". ("+ name +  ")</span>\
+
+      if (name == undefined) {
+        return "<div id=\"" + typename+counter + "\" class=\"theorem\">\n\
+      <p> <span class=\"thmtitle\" style=\"font-weight: bold;\">" + typename +" "+ counter ++ + ".</span>\
       <span class=\"thmtext\">" + text + "</span></p>\n</div>";
+      } else {
+        return "<div id=\"" + typename+counter + "\" class=\"theorem\">\n\
+      <p> <span class=\"thmtitle\"  style=\"font-weight: bold;\">" + typename +" "+ counter ++ + ". ("+ name +  ")</span>\
+      <span class=\"thmtext\">" + text + "</span></p>\n</div>";
+      }
     }
+
     function getlabel (str) {
       var ref_word, ref_word_thm;
       var typename;
-      var reg = /\\begin{(lemma|thm)}.*?\\label{(.*?)}/gm;
+      var reg = /\\begin{(lemma|theorem)}.*?\\label{(.*?)}/gm;
       var thm_counter = 0;
       var lem_counter = 0;
       var counter = 0;
       var result = null;
       while((result = reg.exec(str)) != null){
-          if(result[1] == "thm") {
+          if(result[1] == "theorem") {
               ++thm_counter;
               typename = "Theorem";
               counter = thm_counter;
@@ -95,27 +122,35 @@
       }
 
       // section
-      var reg_sec = /\<p\>\\(section|subsection|subsubsection)\{(.*?)\}(\\label\{sec:(.*?)\}){0,1}\<\/p\>/gm;
+      // var reg_sec = /\<p\>\\(section|subsection|subsubsection)\{(.*?)\}(\\label\{sec:(.*?)\}){0,1}\<\/p\>/gm;
+      var reg_sec = /\\(section|subsection|subsubsection)\{(.*?)\}(\\label\{sec:(.*?)\}){0,1}/gm;
       var sec_counter = 0;
+      var subsec_counter = 0;
+      var subsubsec_counter = 0;
       while((result = reg_sec.exec(str)) != null) {
-        ++sec_counter;
-        if(result[3] != undefined) {
-          // ref_word = new RegExp(result[4], "gm");
-          str = str.replace("\\ref{sec:" + result[4] + "}", sec_counter);
+        if(result[1] == "section") {
+          ++sec_counter;
+          str = str.replace("\\ref\{sec:" + result[4] + "\}", sec_counter);
+        } else if(result[1] == "subsection") {
+          ++subsec_counter;
+          str = str.replace("\\ref\{sec:" + result[4] + "\}", sec_counter + "." + subsec_counter);
+        } else if(result[1] == "subsubsection") {
+          ++subsubsec_counter;
+          str = str.replace("\\ref\{sec:" + result[4] + "\}", sec_counter + "." + subsec_counter + "." + subsubsec_counter);
         }
       }
-      function sec_rep(word, sec_type, sec_name, is_label, sec_label, text, html) {
+      function sec_rep(word, sec_type, sec_name, is_label, sec_label) {
         if(is_label == undefined) {
-          if(sec_type == "section") return "<h2 class=\"mume-header\">" + sec_name + "</h2>";
+          if(sec_type == "section") return "<h2 class=\"mume-header\">" + sec_counter + ". " + sec_name + "</h2>";
           else if(sec_type == "subsection") return "<h3 class=\"mume-header\">" + sec_name + "</h3>";
           else return "<h4 class=\"mume-header\">" + sec_name + "</h4>";
         } else {
-          if(sec_type == "section") return "<h2 class=\"mume-header\" id = \"" + sec_label + "\">" + sec_name + "</h2>";
-          else if(sec_type == "subsection") return "<h3 class=\"mume-header\" id = \"" + sec_label + "\">" + sec_name + "</h3>";
-          else return "<h4 class=\"mume-header\" id = \"" + sec_label + "\">" + sec_name + "</h4>";
+          if(sec_type == "section") return "<h2 class=\"mume-header\" id = \"" + sec_label + "\">" + sec_counter + ". " + sec_name + "</h2>";
+          else if(sec_type == "subsection") return "<h3 class=\"mume-header\" id = \"" + sec_label + "\">" + sec_counter + "." + subsec_counter + ". " + sec_name + "</h3>";
+          else return "<h4 class=\"mume-header\" id = \"" + sec_label + "\">" + sec_counter + "." + subsec_counter + "." + subsubsec_counter + ". " + sec_name + "</h4>";
         }
       }
-      str = str.replace(/\<p\>\\(section|subsection)\{(.*?)\}(\\label\{(.*?)\}){0,1}\<\/p\>/gm, sec_rep);
+      str = str.replace(/\\(section|subsection|subsubsection)\{(.*?)\}(\\label\{(.*?)\}){0,1}/gm, sec_rep);
 
       return str;
   }
@@ -127,9 +162,17 @@
       thm_rep
   );
 
+  
+
+  // html = html.replace(/(p \S{22})noindent:/gm, "<p class=\"noindent\">xxx $1 xxx");
+
+  html = html.replace(/<p( data-source-line=\"([0-9]{0,5})\"){0,1}>noindent\:/gm, "<p class=\"noindent\">")
+
   // color
   html = html.replace(/{\\color{(.*?)}([\s\S]*?)% end of color\n}/gm, "<font color=\"$1\">$2</font>");
   
+  // html = html.replace("<p><p class", "<p class");
+
     return html;
   },
   

@@ -1,0 +1,62 @@
+
+\documentclass[12pt]{article}
+
+\usepackage{amsmath}
+
+
+\begin{document}
+\title{Live-update the tex file via markdown}
+\author{}
+\date{\today}
+
+\maketitle
+
+\section{Equations and Crossref}\label{sec:cross}
+
+It is a sample file.
+
+The parser.js here is used to support equation numbering and crossref in MPE with both KaTeX and MathJax. Rendering engines markdown-it and pandoc are both supported. The default markdown-it engine with KaTeX for math is recommended.
+\begin{equation}\label{equ:tri}
+    a^2 + b^2 = c^2
+\end{equation}
+Equation \ref{equ:tri} shows a equation.
+
+
+Equation without number:
+\begin{equation*}
+    a^2 + b^2 = c^2
+\end{equation*}
+
+Meaningless Multiple lines:
+\begin{align*}
+    a&=b+c \\
+    d+e&=f
+\end{align*}
+
+
+Multiple lines with a single number.
+\begin{equation}\label{equ:multi}
+    \begin{aligned}
+        a&=b+c \\
+        d+e&=f
+    \end{aligned}
+\end{equation}
+Equation \ref{equ:multi} is a multi-line equation.
+
+\textbf{Todo:} Multiple lines with mutliple numbers \textit{are not supported for now.}
+\begin{align}
+    a&=b+c \\
+    d+e&=f
+\end{align}
+
+\section{Crossref of section}
+
+Section \ref{sec:cross} is the above section.
+
+% \bibliographystyle{asa}
+% \bibliography{ref.bib}
+
+% \newpage
+% \appendix
+
+\end{document}
