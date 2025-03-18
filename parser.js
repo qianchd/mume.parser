@@ -8,7 +8,9 @@
 
     markdown = markdown.replace(/\\bibliography([\s\S]*)\\end{document}/gm, "")
 
-    markdown = markdown.replace(/% (.*)/gm, "")
+    markdown = markdown.replace(/%(.*)/gm, "")
+
+    // markdown = markdown.replace("align*", "aligned")
     
     // align, equation label and auto-numbering
     var reg_eq = /\\begin{equation}(\\label{(.*?)})?([\s\S]*?)\\end{equation}/gm;
@@ -27,7 +29,6 @@
       if(eq_type != eq_type2) {
         return "ERROR: begin and end no match!!!!!!!!!\n" + indent_marker
       }
-      if(eq_type == "align\*") eq_type = "aligned"
       if(indent_marker != "") {
         return "```math \n \\begin{" + eq_type + "} " + eq_text + "\\end{" + eq_type + "}\n```\n" + "noindent:" + indent_marker
       } else {
@@ -35,7 +36,10 @@
       }
     }
 
-    markdown = markdown.replace(/\\begin{(equation|equation\*|align\*)}([\s\S]*?)\\end{(equation|equation\*|align\*)}\n(.*)/gm, eq_rep_with_indent_marker);
+    markdown = markdown.replace(/\\begin{(equation|equation\*|align|align\*)}([\s\S]*?)\\end{(equation|equation\*|align|align\*)}(\n|\s)(.*?)/gm, eq_rep_with_indent_marker);
+
+
+    // markdown = markdown.replace(/\\begin{(align)}([\s\S]*?)\\end{(align)}\s(.*)/gm, "xxx $4 xxx");
 
     //bf bb cal scr
     // markdown = markdown.replace(/\\([a-zA-Z])(bf|bb|cal|scr)/gm, "\\math$2{$1}");
