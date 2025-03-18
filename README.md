@@ -31,6 +31,6 @@ Though the parser is still in development, it is now usable. The only thing have
 To use this patch in your vscode, you need to 
 1. install the extension [markdown-preview-enhanced](https://github.com/shd101wyy/vscode-markdown-preview-enhanced)
 2. Add the "tex" extension to the `markdown-preview-enhanced.markdownFileExtensions` in the settings.json file **in** your vscode.
-3. `shift+alt+p", then search the command `Markdown Preview Enhanced: Customize CSS (Global)` and `Markdown Preview Enhanced: Extend Parser`; copy the `config.js` and `parser.js` file into your folder.
+3. `shift+alt+p`, then search the command `Markdown Preview Enhanced: Customize CSS (Global)` and `Markdown Preview Enhanced: Extend Parser`; copy the `config.js` and `parser.js` file into your folder.
 
-Then, open the "example.tex" file in the vscode,  `shift+alt+p", then run the command `Markdown Preview Enhanced: Open Preview to the Side`. The tex file will lively compile via the markdown-it engine with KaTeX.
+Then, open the `example.tex` file in the vscode,  `shift+alt+p`, then run the command `Markdown Preview Enhanced: Open Preview to the Side`. The tex file will lively compile via the markdown-it engine with KaTeX.
