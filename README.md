@@ -33,4 +33,4 @@ To use this patch in your vscode, you need to
 2. Add the "tex" extension to the `markdown-preview-enhanced.markdownFileExtensions` in the settings.json file **in** your vscode.
 3. `shift+alt+p", then search the command `Markdown Preview Enhanced: Customize CSS (Global)` and `Markdown Preview Enhanced: Extend Parser`; copy the `config.js` and `parser.js` file into your folder.
 
-Then, open the "sample.tex" file in the vscode,  `shift+alt+p", then run the command `Markdown Preview Enhanced: Open Preview to the Side`. The tex file will lively compile via the markdown-it engine with KaTeX.
+Then, open the "example.tex" file in the vscode,  `shift+alt+p", then run the command `Markdown Preview Enhanced: Open Preview to the Side`. The tex file will lively compile via the markdown-it engine with KaTeX.
