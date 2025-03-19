@@ -3,23 +3,76 @@
 /*   https://shd101wyy.github.io/markdown-preview-enhanced/#/customize-css */
 
 .markdown-preview.markdown-preview {
-    // modify your style here
-    // eg: background-color: blue;
-    font-size: max(min(2.3vw, 18pt), 12pt);
-    font-family: Times, "Times New Roman", Georgia, serif;
-    scrollbar-width: thin;
-    padding: 10pt!important;
-    .katex {
-      font-size: max(min(2.3vw, 18pt), 12pt); // <= font size here
-      text-indent: 0;
-      text-rendering: auto;
-    }
-  
-    p {
-      text-indent:2em
-    }
-  
-    h1 {
-      text-align: center;
-    }
-  }
+  // modify your style here
+  // eg: background-color: blue;
+  font-size: max(min(2.3vw, 18pt), 12pt);
+  font-family: Times, "Times New Roman", Georgia, serif;
+  scrollbar-color: unset!important;
+  scrollbar-width: thin;
+  padding: 10pt!important;
+
+}
+
+span.katex-display {
+  margin: 0.4em;
+}
+
+.katex {
+  font-size: max(min(2.3vw, 18pt), 12pt);
+  text-indent: 0;
+  text-rendering: auto;
+}
+
+p {
+  text-indent: 2em;
+  margin: 0em;
+  padding: 0;
+  line-height: 2;
+}
+
+p.noindent {
+  text-indent: 0;
+}
+
+.theorem>p {
+  text-indent: 0;
+  margin: 0em;
+  padding: 0em 0em;
+  // border: 1px solid #ccc;
+  // background-color: #f9f9f9;
+  // border-radius: 3px;
+}
+
+h1 {
+  text-align: center;
+}
+
+
+* {
+    scrollbar-color: unset!important;
+}
+
+::-webkit-scrollbar {
+  width: 7px;
+  height: 7px;
+  background-color: transparent;
+  border-style: none;
+}
+
+::-webkit-scrollbar-track:hover {
+  background-color: rgba(0, 0, 0, .25);
+}
+
+:hover::-webkit-scrollbar-thumb,
+:focus::-webkit-scrollbar-thumb {
+  background-clip: border-box;
+  background-color: rgba(0, 0, 0, .25);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(0, 0, 0, .3);
+}
+
+::-webkit-scrollbar-thumb:active {
+  background-color: rgba(0, 0, 0, .5);
+}
