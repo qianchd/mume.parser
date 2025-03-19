@@ -1,14 +1,8 @@
 ({
   onWillParseMarkdown: async function(markdown) {
+    markdown = markdown.replace(/[\s\S]*\\title{(.*?)}[\s\S]*\\maketitle/, "<h1 class=\"mume-header\">$1</h1>");
 
-    var title_search = /\\title{(.*?)}/gm; 
-    title = title_search.exec(markdown)[1];
-
-    markdown = markdown.replace(/([\s\S]*)\\maketitle/gm, "<h1 class=\"mume-header\">" + title + "</h1>");
-
-    markdown = markdown.replace(/\\bibliography([\s\S]*)\\end{document}/gm, "")
-
-    markdown = markdown.replace(/%(.*)/gm, "")
+    markdown = markdown.replace(/%.*|(\\bibliography[\s\S]*)?\\end{document}/gm, "")
 
     // markdown = markdown.replace("align*", "aligned")
     
@@ -85,8 +79,7 @@
         ++lem_counter;
       }
 
-      text = text.replace(/<p.*?>|<\/p>/gm, ($1) => "");
-      text = text.replace(/^\s*\n/gm, "");
+      text = text.replace(/<p.*?>|<\/p>|^\s*\n/gm, "");
 
       if (name == undefined) {
         return "<div id=\"" + typename+counter + "\" class=\"theorem\">\n\
@@ -173,9 +166,8 @@
   html = html.replace(/<p( data-source-line=\"([0-9]{0,5})\"){0,1}>noindent\:/gm, "<p class=\"noindent\">")
 
   // color
-  html = html.replace(/{\\color{(.*?)}([\s\S]*?)% end of color\n}/gm, "<font color=\"$1\">$2</font>");
-  
-  // html = html.replace("<p><p class", "<p class");
+  // html = html.replace(/{\\color{(.*?)}([\s\S]*?)% end of color\n}/gm, "<font color=\"$1\">$2</font>");
+
 
     return html;
   },
