@@ -1,4 +1,4 @@
-# mume.parser
+# Live-update the tex code via mume.parser.
 
 This patch is an interesting experiment about live-updating pure tex code using markdown engines in vscode, with the help of the nice feature about user-defined parser in the extension [markdown-preview-enhanced](https://github.com/shd101wyy/vscode-markdown-preview-enhanced).
 
@@ -23,6 +23,9 @@ Some useful features
 - add math shorthands using the KaTeX macros in `config.js`
 - removing texts before maketitle and after bib to the end. It makes the live update work.
 - Number and Cross-reference of sections, equations, theorems, lemmas...
+
+Some regular rules
+- Only the label equation should be numbered. It means that we only use the envs like equation, equation*, align* or equation+aligned, but not align.
 
 Though the parser is still in development, it is now usable. The only thing haven't been touched is the table environment. I think it is now handily useful and a good start point for further development.
 
