@@ -2,6 +2,8 @@
   onWillParseMarkdown: async function(markdown) {
     markdown = markdown.replace(/[\s\S]*\\title{(.*?)}[\s\S]*\\maketitle/, "<h1 class=\"mume-header\">$1</h1>");
 
+    markdown = markdown.replace(/\\vspace{(.*)?}/gm, "<p style=\"margin:$1 $1 0 0;\"></p>")
+
     markdown = markdown.replace(/%.*|(\\bibliography[\s\S]*)?\\end{document}/gm, "")
 
     // markdown = markdown.replace("align*", "aligned")
@@ -92,6 +94,11 @@
       }
     }
 
+    function replaceSubstring(originalString, startIndex, endIndex, newSubstring) {
+      return originalString.substring(0, startIndex) + newSubstring + originalString.substring(endIndex);
+    }
+
+
     function getlabel (str) {
       var ref_word, ref_word_thm;
       var typename;
@@ -120,34 +127,29 @@
 
       // section
       // var reg_sec = /\<p\>\\(section|subsection|subsubsection)\{(.*?)\}(\\label\{sec:(.*?)\}){0,1}\<\/p\>/gm;
-      var reg_sec = /\\(section|subsection|subsubsection)\{(.*?)\}(\\label\{sec:(.*?)\}){0,1}/gm;
+      var reg_sec = /\\(section|subsection|subsubsection)\{(.*?)\}(\\label\{sec:(.*?)\}){0,1}/gmd;
       var sec_counter = 0;
       var subsec_counter = 0;
       var subsubsec_counter = 0;
+
       while((result = reg_sec.exec(str)) != null) {
         if(result[1] == "section") {
           ++sec_counter;
+          subsec_counter = 0;
+          subsubsec_counter = 0;
           str = str.replace("\\ref\{sec:" + result[4] + "\}", sec_counter);
+          str = replaceSubstring(str, result.indices[0][0], result.indices[0][1], "<h2 class=\"mume-header\">" + sec_counter + ". " + result[2] + "</h2>")
         } else if(result[1] == "subsection") {
           ++subsec_counter;
+          subsubsec_counter = 0;
           str = str.replace("\\ref\{sec:" + result[4] + "\}", sec_counter + "." + subsec_counter);
+          str = replaceSubstring(str, result.indices[0][0], result.indices[0][1], "<h3 class=\"mume-header\">" + sec_counter + "." + subsec_counter + ". " + result[2] + "</h3>")
         } else if(result[1] == "subsubsection") {
           ++subsubsec_counter;
           str = str.replace("\\ref\{sec:" + result[4] + "\}", sec_counter + "." + subsec_counter + "." + subsubsec_counter);
+          str = replaceSubstring(str, result.indices[0][0], result.indices[0][1], "<h4 class=\"mume-header\">" + sec_counter + "." + subsec_counter + "." + subsubsec_counter + ". " + result[2] + "</h4>")
         }
       }
-      function sec_rep(word, sec_type, sec_name, is_label, sec_label) {
-        if(is_label == undefined) {
-          if(sec_type == "section") return "<h2 class=\"mume-header\">" + sec_counter + ". " + sec_name + "</h2>";
-          else if(sec_type == "subsection") return "<h3 class=\"mume-header\">" + sec_name + "</h3>";
-          else return "<h4 class=\"mume-header\">" + sec_name + "</h4>";
-        } else {
-          if(sec_type == "section") return "<h2 class=\"mume-header\" id = \"" + sec_label + "\">" + sec_counter + ". " + sec_name + "</h2>";
-          else if(sec_type == "subsection") return "<h3 class=\"mume-header\" id = \"" + sec_label + "\">" + sec_counter + "." + subsec_counter + ". " + sec_name + "</h3>";
-          else return "<h4 class=\"mume-header\" id = \"" + sec_label + "\">" + sec_counter + "." + subsec_counter + "." + subsubsec_counter + ". " + sec_name + "</h4>";
-        }
-      }
-      str = str.replace(/\\(section|subsection|subsubsection)\{(.*?)\}(\\label\{(.*?)\}){0,1}/gm, sec_rep);
 
       return str;
   }
