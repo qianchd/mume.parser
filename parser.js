@@ -1,5 +1,9 @@
 ({
+
   onWillParseMarkdown: async function(markdown) {
+    function replaceSubstring(originalString, startIndex, endIndex, newSubstring) {
+      return originalString.substring(0, startIndex) + newSubstring + originalString.substring(endIndex);
+    };
     markdown = markdown.replace(/[\s\S]*\\title{(.*?)}[\s\S]*\\maketitle/, "<h1 class=\"mume-header\">$1</h1>");
 
     markdown = markdown.replace(/\\vspace{(.*)?}/gm, "<p style=\"margin:$1 $1 0 0;\"></p>")
@@ -9,17 +13,32 @@
     // markdown = markdown.replace("align*", "aligned")
     
     // align, equation label and auto-numbering
-    var reg_eq = /\\begin{equation}(\\label{(.*?)})?([\s\S]*?)\\end{equation}/gm;
+    var reg_eq = /\\begin{equation}(\\label{(.*?)})?([\s\S]*?)\\end{equation}/gmd;
     var eq_counter = 0;
+    let eq_label_list = [];
+    let eq_number_list = [];
     while((result = reg_eq.exec(markdown)) != null) {
       ++eq_counter;
       if (result[1] != undefined) {
-        ref_word = new RegExp("\\\\ref{" + result[2] + "}", "gm");
-        markdown = markdown.replace(ref_word, ($0) => eq_counter);
-        ref_word2 = new RegExp("\\\\begin{equation}\\\\label{" + result[2] + "}([\\s\\S]*?)\\\\end{equation}", "gm");
-        markdown = markdown.replace(ref_word2, "\\begin{equation} $1 \\tag{"+ eq_counter + "}\\end{equation}");
+        eq_label_list.push(result[2]);
+        eq_number_list.push(eq_counter);
+        // ref_word = new RegExp("\\\\ref{" + result[2] + "}", "gm");
+        // markdown = markdown.replace(ref_word, eq_counter);
+        markdown = replaceSubstring(markdown, result.indices[0][0], result.indices[0][1], "\\begin{equation} " + result[3] + " \\tag{"+ eq_counter + "}\\end{equation}");
       }
     }
+
+    let pattern = eq_label_list.map((label) => {
+      // 对标签字符串进行转义，防止正则表达式中的特殊字符干扰
+      return label.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    }).join("|");
+    let regex = new RegExp("\\\\ref{(" + pattern + ")}", "gm");
+    markdown = markdown.replace(regex, (match, label) => {
+      // 找到标签在 eq_label_list 中的索引
+      const index = eq_number_list[eq_label_list.indexOf(label)];
+      // 返回对应的序号（从1开始）
+      return `${index}`;
+    });
 
     function eq_rep_with_indent_marker(word, eq_type, eq_text, eq_type2, indent_marker) {
       if(eq_type != eq_type2) {
@@ -65,6 +84,10 @@
   },
 
   onDidParseMarkdown: async function(html) {
+    function replaceSubstring(originalString, startIndex, endIndex, newSubstring) {
+      return originalString.substring(0, startIndex) + newSubstring + originalString.substring(endIndex);
+    };
+    
     // theorem and lemma
     var thm =  /\\begin{(theorem|lemma)}(\[(.*?)\]){0,1}(\\label{(.*?)}){0,1}([\s\S]*?)\\end{(theorem|lemma)}/gm;
     var thm_counter = 1;
@@ -92,10 +115,6 @@
       <p> <span class=\"thmtitle\"  style=\"font-weight: bold;\">" + typename +" "+ counter ++ + ". ("+ name +  ")</span>\
       <span class=\"thmtext\">" + text + "</span></p>\n</div>";
       }
-    }
-
-    function replaceSubstring(originalString, startIndex, endIndex, newSubstring) {
-      return originalString.substring(0, startIndex) + newSubstring + originalString.substring(endIndex);
     }
 
 
