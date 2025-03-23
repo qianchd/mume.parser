@@ -13,48 +13,71 @@
     // markdown = markdown.replace("align*", "aligned")
     
     // align, equation label and auto-numbering
-    var reg_eq = /\\begin{equation}(\\label{(.*?)})?([\s\S]*?)\\end{equation}/gmd;
+    let env_list = ["equation", "equation*", "align*", "theorem", "lemma"];
+    var reg_eq = /\\begin{(equation|equation\*|align\*|theorem|lemma)}(\[(.*?)\]){0,1}(\\label{(.*?)})?([\s\S]*?)\\end{(\1)}(\s\n)(.*)/gmd;
+    var counter = 0;
     var eq_counter = 0;
-    let eq_label_list = [];
-    let eq_number_list = [];
+    var thm_counter = 0;
+    var lem_counter = 0;
+    var sec_counter = 0;
+    var subsec_counter = 0;
+    var subsubsec_counter = 0;
+    var env_idx = 0;
+    var thetag = "";
+    let label_list = [];
+    let number_list = [];
     while((result = reg_eq.exec(markdown)) != null) {
-      ++eq_counter;
-      if (result[1] != undefined) {
-        eq_label_list.push(result[2]);
-        eq_number_list.push(eq_counter);
-        // ref_word = new RegExp("\\\\ref{" + result[2] + "}", "gm");
-        // markdown = markdown.replace(ref_word, eq_counter);
-        markdown = replaceSubstring(markdown, result.indices[0][0], result.indices[0][1], "\\begin{equation} " + result[3] + " \\tag{"+ eq_counter + "}\\end{equation}");
+      if (result[1] == "equation") counter = ++eq_counter;
+      if (result[1] == "theorem") counter = ++thm_counter;
+      if (result[1] == "lemma") counter = ++lem_counter;
+      if (result[4] != undefined) {
+        label_list.push(result[5]);
+        number_list.push(counter);
       }
+
+      env_idx = env_list.indexOf(result[1]);
+      if(env_idx <= 2) {
+        if (result[4] != undefined) {
+          thetag = " \\tag{" + eq_counter + "} ";
+        } else {
+          thetag = "";
+        }
+
+        xxxx = "\\begin{" + result[1] + "} " + result[6] + thetag + "\\end{" + result[1] +"}";
+        if(result[9] != "") {
+          xxxx = "```math \n" + xxxx +"\n```\n" + "noindent:" + result[9] + "\n";
+        } else {
+          xxxx = "```math \n" + xxxx +"\n```\n";
+        }
+      } else if(env_idx <= 4) {
+        if (result[1] == "theorem") {
+          var typename = "Theorem";
+        }
+        if (result[1] == "lemma") {
+          var typename = "Lemma";
+        }
+        if (result[2] != undefined) {
+          thmname = result[3];
+        } else {
+          thmname = "";
+        }
+        //xxxx = "<div id=\"" + typename+counter + "\" class=\"theorem\">\n<p> <span class=\"thmtitle\" style=\"font-weight: bold;\">" + typename +" "+ counter + "." + thmname + "</span> <span class=\"thmtext\">" + result[6] + "</span></p>\n</div>"
+        xxxx = "begin" + typename + "thmcounter" + counter  + "thmname" + thmname + "thmbody" + result[6] + "end" + typename + "\n";
+      }
+      markdown = replaceSubstring(markdown, result.indices[0][0], result.indices[0][1], xxxx);
     }
 
-    let pattern = eq_label_list.map((label) => {
+    let pattern = label_list.map((label) => {
       // 对标签字符串进行转义，防止正则表达式中的特殊字符干扰
       return label.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
     }).join("|");
-    let regex = new RegExp("\\\\ref{(" + pattern + ")}", "gm");
+    let regex = new RegExp("\\\\ref{(" + pattern + ")?}", "gm");
     markdown = markdown.replace(regex, (match, label) => {
-      // 找到标签在 eq_label_list 中的索引
-      const index = eq_number_list[eq_label_list.indexOf(label)];
+      // 找到标签在 label_list 中的索引
+      const index = number_list[label_list.indexOf(label)];
       // 返回对应的序号（从1开始）
       return `${index}`;
     });
-
-    function eq_rep_with_indent_marker(word, eq_type, eq_text, eq_type2, indent_marker) {
-      if(eq_type != eq_type2) {
-        return "ERROR: begin and end no match!!!!!!!!!\n" + indent_marker
-      }
-      if(indent_marker != "") {
-        return "```math \n \\begin{" + eq_type + "} " + eq_text + "\\end{" + eq_type + "}\n```\n" + "noindent:" + indent_marker
-      } else {
-        return "```math \n \\begin{" + eq_type + "} " + eq_text + "\\end{" + eq_type + "}\n```\n"
-      }
-    }
-
-    markdown = markdown.replace(/\\begin{(equation|equation\*|align|align\*)}([\s\S]*?)\\end{(equation|equation\*|align|align\*)}(\n|\s)(.*?)/gm, eq_rep_with_indent_marker);
-
-
-    // markdown = markdown.replace(/\\begin{(align)}([\s\S]*?)\\end{(align)}\s(.*)/gm, "xxx $4 xxx");
 
     //bf bb cal scr
     // markdown = markdown.replace(/\\([a-zA-Z])(bf|bb|cal|scr)/gm, "\\math$2{$1}");
@@ -87,65 +110,9 @@
     function replaceSubstring(originalString, startIndex, endIndex, newSubstring) {
       return originalString.substring(0, startIndex) + newSubstring + originalString.substring(endIndex);
     };
-    
-    // theorem and lemma
-    var thm =  /\\begin{(theorem|lemma)}(\[(.*?)\]){0,1}(\\label{(.*?)}){0,1}([\s\S]*?)\\end{(theorem|lemma)}/gm;
-    var thm_counter = 1;
-    var lem_counter = 1;
-    function thm_rep(word, type, _, name, label, label_name, text) {
-      if (type == "theorem") {
-        var counter = thm_counter;
-        var typename = "Theorem";
-        ++thm_counter;
-      }
-      if (type == "lemma") {
-        var counter = lem_counter;
-        var typename = "Lemma";
-        ++lem_counter;
-      }
-
-      text = text.replace(/<p.*?>|<\/p>|^\s*\n/gm, "");
-
-      if (name == undefined) {
-        return "<div id=\"" + typename+counter + "\" class=\"theorem\">\n\
-      <p> <span class=\"thmtitle\" style=\"font-weight: bold;\">" + typename +" "+ counter ++ + ".</span>\
-      <span class=\"thmtext\">" + text + "</span></p>\n</div>";
-      } else {
-        return "<div id=\"" + typename+counter + "\" class=\"theorem\">\n\
-      <p> <span class=\"thmtitle\"  style=\"font-weight: bold;\">" + typename +" "+ counter ++ + ". ("+ name +  ")</span>\
-      <span class=\"thmtext\">" + text + "</span></p>\n</div>";
-      }
-    }
-
 
     function getlabel (str) {
-      var ref_word, ref_word_thm;
-      var typename;
-      var reg = /\\begin{(lemma|theorem)}.*?\\label{(.*?)}/gm;
-      var thm_counter = 0;
-      var lem_counter = 0;
-      var counter = 0;
       var result = null;
-      while((result = reg.exec(str)) != null){
-          if(result[1] == "theorem") {
-              ++thm_counter;
-              typename = "Theorem";
-              counter = thm_counter;
-          }
-          if(result[1] == "lemma") {
-              ++lem_counter;
-              typename = "Lemma";
-              counter = lem_counter;
-          }
-          ref_word = new RegExp("\\\\ref{" + result[2] + "}", "gm");
-          ref_word_thm = new RegExp("\\\\thmref{" + result[2] + "}", "gm");
-          str = str.replace(ref_word_thm, ($0) =>   typename + " " + "<a href=#" + typename+counter + ">" + counter + "</a>");
-          str = str.replace(ref_word, ($0) => counter);
-          //console.log(result);
-      }
-
-      // section
-      // var reg_sec = /\<p\>\\(section|subsection|subsubsection)\{(.*?)\}(\\label\{sec:(.*?)\}){0,1}\<\/p\>/gm;
       var reg_sec = /\\(section|subsection|subsubsection)\{(.*?)\}(\\label\{sec:(.*?)\}){0,1}/gmd;
       var sec_counter = 0;
       var subsec_counter = 0;
@@ -175,14 +142,21 @@
 
   html = getlabel(html);
 
-  html = html.replace(
-      thm, 
-      thm_rep
-  );
 
+  function thm_mod(word, thmtype, thmnum, thmname, thmbody) {
+    if(thmname == "") {
+      return "<div id=\"" + thmtype+thmnum + "\" class=\"theorem\">\n\
+  <p> <span class=\"thmtitle\" style=\"font-weight: bold;\">" + thmtype +" "+ thmnum + ".</span>\
+  <span class=\"thmbody\">" + thmbody + "</span></p>\n</div>";
+    } else {
+      return "<div id=\"" + thmtype+thmnum + "\" class=\"theorem\">\n\
+  <p> <span class=\"thmtitle\" style=\"font-weight: bold;\">" + thmtype +" "+ thmnum + "." + "(" + thmname + ")</span>\
+  <span class=\"thmbody\">" + thmbody + "</span></p>\n</div>";
+    }
+  }
+
+  html = html.replace(/begin(Theorem|Lemma)thmcounter([0-9]*?)thmname(.*?)thmbody([\s\S]*?)end\1/gm, thm_mod);
   
-
-  // html = html.replace(/(p \S{22})noindent:/gm, "<p class=\"noindent\">xxx $1 xxx");
 
   html = html.replace(/<p( data-source-line=\"([0-9]{0,5})\"){0,1}>noindent\:/gm, "<p class=\"noindent\">")
 
