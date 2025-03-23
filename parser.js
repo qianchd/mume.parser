@@ -13,8 +13,8 @@
     // markdown = markdown.replace("align*", "aligned")
     
     // align, equation label and auto-numbering
-    let env_list = ["equation", "equation*", "align*", "theorem", "lemma"];
-    var reg_eq = /\\begin{(equation|equation\*|align\*|theorem|lemma)}(\[(.*?)\]){0,1}(\\label{(.*?)})?([\s\S]*?)\\end{(\1)}(\s\n)(.*)/gmd;
+    let env_list = ["equation", "equation*", "align*", "theorem", "lemma", "proof"];
+    var reg_eq = /\\begin{(equation|equation\*|align\*|theorem|lemma|proof)}(\[(.*?)\]){0,1}(\\label{(.*?)})?([\s\S]*?)\\end{(\1)}(\s\n)(.*)/gmd;
     var counter = 0;
     var eq_counter = 0;
     var thm_counter = 0;
@@ -24,9 +24,11 @@
     var subsubsec_counter = 0;
     var env_idx = 0;
     var thetag = "";
+    var typename = "";
     let label_list = [];
     let number_list = [];
     while((result = reg_eq.exec(markdown)) != null) {
+      xxxx = "";
       if (result[1] == "equation") counter = ++eq_counter;
       if (result[1] == "theorem") counter = ++thm_counter;
       if (result[1] == "lemma") counter = ++lem_counter;
@@ -49,19 +51,21 @@
         } else {
           xxxx = "```math \n" + xxxx +"\n```\n";
         }
-      } else if(env_idx <= 4) {
+      } else if(env_idx <= 5) {
         if (result[1] == "theorem") {
-          var typename = "Theorem";
+          typename = "Theorem";
         }
         if (result[1] == "lemma") {
-          var typename = "Lemma";
+          typename = "Lemma";
+        }
+        if (result[1] == "proof") {
+          typename = "Proof";
         }
         if (result[2] != undefined) {
           thmname = result[3];
         } else {
           thmname = "";
         }
-        //xxxx = "<div id=\"" + typename+counter + "\" class=\"theorem\">\n<p> <span class=\"thmtitle\" style=\"font-weight: bold;\">" + typename +" "+ counter + "." + thmname + "</span> <span class=\"thmtext\">" + result[6] + "</span></p>\n</div>"
         xxxx = "begin" + typename + "thmcounter" + counter  + "thmname" + thmname + "thmbody" + result[6] + "end" + typename + "\n";
       }
       markdown = replaceSubstring(markdown, result.indices[0][0], result.indices[0][1], xxxx);
@@ -144,18 +148,29 @@
 
 
   function thm_mod(word, thmtype, thmnum, thmname, thmbody) {
+    if(thmtype == "Proof") {
+      if(thmname == "") {
+        return "<div class=\"proof\">\n\
+                    <p> <span class=\"thmtitle\" style=\"font-style: italic;\">" + thmtype +".</span>\
+                    <span class=\"proofbody\">" + thmbody + "&#9607</span></p>\n</div>";
+      } else {
+        return "<div class=\"proof\">\n\
+                    <p> <span class=\"thmtitle\" style=\"font-style: italic;\">" + thmname + ".</span>\
+                    <span class=\"proofbody\">" + thmbody + "&#9607</span></p>\n</div>";
+      }
+    }
     if(thmname == "") {
       return "<div id=\"" + thmtype+thmnum + "\" class=\"theorem\">\n\
-  <p> <span class=\"thmtitle\" style=\"font-weight: bold;\">" + thmtype +" "+ thmnum + ".</span>\
-  <span class=\"thmbody\">" + thmbody + "</span></p>\n</div>";
+                  <p> <span class=\"thmtitle\" style=\"font-weight: bold;\">" + thmtype +" "+ thmnum + ".</span>\
+                  <span class=\"thmbody\">" + thmbody + "</span></p>\n</div>";
     } else {
       return "<div id=\"" + thmtype+thmnum + "\" class=\"theorem\">\n\
-  <p> <span class=\"thmtitle\" style=\"font-weight: bold;\">" + thmtype +" "+ thmnum + "." + "(" + thmname + ")</span>\
-  <span class=\"thmbody\">" + thmbody + "</span></p>\n</div>";
+                  <p> <span class=\"thmtitle\" style=\"font-weight: bold;\">" + thmtype +" "+ thmnum + "." + "(" + thmname + ")</span>\
+                  <span class=\"thmbody\">" + thmbody + "</span></p>\n</div>";
     }
   }
 
-  html = html.replace(/begin(Theorem|Lemma)thmcounter([0-9]*?)thmname(.*?)thmbody([\s\S]*?)end\1/gm, thm_mod);
+  html = html.replace(/begin(Theorem|Lemma|Proof)thmcounter([0-9]*?)thmname(.*?)thmbody([\s\S]*?)end\1/gm, thm_mod);
   
 
   html = html.replace(/<p( data-source-line=\"([0-9]{0,5})\"){0,1}>noindent\:/gm, "<p class=\"noindent\">")
