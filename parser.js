@@ -152,11 +152,11 @@
       if(thmname == "") {
         return "<div class=\"proof\">\n\
                     <p> <span class=\"thmtitle\" style=\"font-style: italic;\">" + thmtype +".</span>\
-                    <span class=\"proofbody\">" + thmbody + "&#9607</span></p>\n</div>";
+                    <span class=\"proofbody\">" + thmbody + "<span style=\"float: right;\">&#9607</span></span></p>\n</div>";
       } else {
         return "<div class=\"proof\">\n\
                     <p> <span class=\"thmtitle\" style=\"font-style: italic;\">" + thmname + ".</span>\
-                    <span class=\"proofbody\">" + thmbody + "&#9607</span></p>\n</div>";
+                    <span class=\"proofbody\">" + thmbody + "<span style=\"float: right;\">&#9607</span></span></p>\n</div>";
       }
     }
     if(thmname == "") {
