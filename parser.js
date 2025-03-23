@@ -69,6 +69,7 @@
         xxxx = "begin" + typename + "thmcounter" + counter  + "thmname" + thmname + "thmbody" + result[6] + "end" + typename + "\n";
       }
       markdown = replaceSubstring(markdown, result.indices[0][0], result.indices[0][1], xxxx);
+      reg_eq.lastIndex = result.indices[0][0] + 10;
     }
 
     let pattern = label_list.map((label) => {
@@ -152,11 +153,11 @@
       if(thmname == "") {
         return "<div class=\"proof\">\n\
                     <p> <span class=\"thmtitle\" style=\"font-style: italic;\">" + thmtype +".</span>\
-                    <span class=\"proofbody\">" + thmbody + "<span style=\"float: right;\">&#9607</span></span></p>\n</div>";
+                    <span class=\"proofbody\">" + thmbody + "<span style=\"float: right;\">&#9744</span></span></p>\n</div>";
       } else {
         return "<div class=\"proof\">\n\
                     <p> <span class=\"thmtitle\" style=\"font-style: italic;\">" + thmname + ".</span>\
-                    <span class=\"proofbody\">" + thmbody + "<span style=\"float: right;\">&#9607</span></span></p>\n</div>";
+                    <span class=\"proofbody\">" + thmbody + "<span style=\"float: right;\">&#9744</span></span></p>\n</div>";
       }
     }
     if(thmname == "") {
