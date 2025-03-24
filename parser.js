@@ -8,7 +8,7 @@
 
     markdown = markdown.replace(/\\vspace{(.*)?}/gm, "<p style=\"margin:$1 $1 0 0;\"></p>")
 
-    markdown = markdown.replace(/%.*|(\\bibliography[\s\S]*)?\\end{document}/gm, "")
+    markdown = markdown.replace(/^[ \t]+|%.*|(\\bibliography[\s\S]*)?\\end{document}/gm, "")
 
     // markdown = markdown.replace("align*", "aligned")
     
